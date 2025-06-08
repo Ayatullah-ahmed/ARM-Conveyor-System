@@ -3,6 +3,7 @@
 #include "Rcc.h"
 #include "Exti.h"
 #include "LCD.h"
+#include "ADC.h"
 
 #define __enable_irq()  (*((volatile uint32_t *)0xE000ED04) = 0)
 
@@ -43,12 +44,23 @@ void SetupButton(void) {
     EXTI_Init();
 }
 
+
+
 int main(void) {
     SetupClocks();
     SetupLCD();
     SetupButton();
+    Gpio_Init(GPIO_C, 0, GPIO_ANALOG, GPIO_PUSH_PULL);  // PC0 → analog mode
+    ADC_Init();                                       // Initialize ADC1 for channel 10
+
+    uint16 pot_value;
 
     while (1) {
+        pot_value = ADC_ReadChannel(10);              // Read PC0 (Channel 10)
+
+        // Optional: convert to voltage or use the value
+        // float voltage = (pot_value * 3.3f) / 4095.0f;
+
         if (isEmergencyActive) {
             Gpio_WritePin(GPIO_B, 12, !Gpio_ReadPin(GPIO_B, 12)); // Debug toggle
             ShowEmergencyMessage();

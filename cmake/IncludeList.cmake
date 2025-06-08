@@ -8,6 +8,7 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         ${PROJECT_PATH}/Gpio
         ${PROJECT_PATH}/LCD
         ${PROJECT_PATH}/Exti
+        ${PROJECT_PATH}/ADC
 )
 
 if (USE_HAL)

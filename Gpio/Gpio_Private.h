@@ -4,6 +4,7 @@
 
 #ifndef GPIO_PRIVATE_H
 #define GPIO_PRIVATE_H
+#include "Utils.h"
 
 
 /* Base Addresses for GPIO Ports */
