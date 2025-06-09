@@ -3,7 +3,6 @@
 // LCD.c
 
 #include "LCD.h"
-#include <stdio.h>
 
 // Delay Implementation with Nested Loops
 void Delay_Short(uint32 microseconds) {
@@ -113,8 +112,23 @@ void LCD_PrintText(const char *text) {
     }
 }
 
+// void LCD_PrintValue(uint16 value) {
+//     char temp[6];
+//     sprintf(temp, "%u", value);
+//     LCD_PrintText(temp);
+// }
+// In LCD.c
 void LCD_PrintValue(uint16 value) {
-    char temp[6];
-    sprintf(temp, "%u", value);
-    LCD_PrintText(temp);
+    char buffer[6]; // Max 5 digits for 16-bit number
+    uint8 i = 5;
+
+    buffer[5] = '\0'; // Null terminator
+
+    // Convert to string (backwards)
+    do {
+        buffer[--i] = '0' + (value % 10);
+        value /= 10;
+    } while (value > 0);
+
+    LCD_PrintText(&buffer[i]);
 }
