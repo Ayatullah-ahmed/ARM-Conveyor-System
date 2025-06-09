@@ -3,6 +3,7 @@
 #include "Gpio_Private.h"
 #include "Utils.h"
 
+
 void Gpio_Init(uint8 PortName, uint8 PinNumber, uint8 PinMode, uint8 DefaultState) {
     switch (PortName) {
         case GPIO_A:
@@ -265,7 +266,6 @@ void Gpio_WritePin(uint8 PortName, uint8 PinNumber, uint8 Data) {
             break;
     }
 }
-
 uint8 Gpio_ReadPin(uint8 PortName, uint8 PinNumber) {
     uint8 pinValue = LOW;
 

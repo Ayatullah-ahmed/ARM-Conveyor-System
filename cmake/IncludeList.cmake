@@ -6,9 +6,11 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         ${PROJECT_PATH}/Lib
         ${PROJECT_PATH}/RCC
         ${PROJECT_PATH}/Gpio
-        ${PROJECT_PATH}/Keypad
-        ${PROJECT_PATH}/SevenSegment
         ${PROJECT_PATH}/LCD
+        ${PROJECT_PATH}/Exti
+        ${PROJECT_PATH}/ADC
+        ${PROJECT_PATH}/PWM
+
 )
 
 if (USE_HAL)

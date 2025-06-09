@@ -26,7 +26,11 @@ add_executable(${EXECUTABLE} ${SOURCE_LIST} ${STARTUP_BASE_DIR}/${SERIES_FOLDER}
         Gpio/Gpio_Private.h
         LCD/LCD.h
         LCD/LCD.c
-        LCD/LCD_Private.h)
+        ADC/ADC.h
+        ADC/ADC.c
+        PWM/PWM.h
+        PWM/PWM.c
+)
 # Include
 target_include_directories(${EXECUTABLE} PUBLIC ${INCLUDE_LIST})
 # Project symbols
