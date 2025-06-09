@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30.00)
+cmake_minimum_required(VERSION 3.30)
 include(cmake/ArmToolchain.cmake)
 
 project(stm32-template C)
@@ -30,6 +30,7 @@ add_executable(${EXECUTABLE} ${SOURCE_LIST} ${STARTUP_BASE_DIR}/${SERIES_FOLDER}
         ADC/ADC.c
         PWM/PWM.h
         PWM/PWM.c
+        syscalls.c
 )
 # Include
 target_include_directories(${EXECUTABLE} PUBLIC ${INCLUDE_LIST})

@@ -11,24 +11,29 @@
 #include "Gpio.h"
 #include "Gpio_Private.h"
 
-/* ADC1 Base Address */
-#define ADC1_BASE     0x40012000
 
-/* ADC1 Registers */
-#define ADC1_SR       (*(volatile uint32 *)(ADC1_BASE + 0x00))
-#define ADC1_CR2      (*(volatile uint32 *)(ADC1_BASE + 0x08))
-#define ADC1_SMPR1    (*(volatile uint32 *)(ADC1_BASE + 0x0C))
-#define ADC1_SMPR2    (*(volatile uint32 *)(ADC1_BASE + 0x10))
-#define ADC1_SQR3     (*(volatile uint32 *)(ADC1_BASE + 0x34))
-#define ADC1_DR       (*(volatile uint32 *)(ADC1_BASE + 0x4C))
+/* ADC1 Base Address */
+#define MY_ADC1_BASE 0x40012000
+
+/* ADC1 Registers - Corrected by adding pointer dereference */
+#define MY_ADC1_SR (*(volatile uint32_t *)(MY_ADC1_BASE + 0x00))
+#define MY_ADC1_CR1 (*(volatile uint32_t *)(MY_ADC1_BASE + 0x04))
+#define MY_ADC1_CR2 (*(volatile uint32_t *)(MY_ADC1_BASE + 0x08))
+#define MY_ADC1_SMPR1 (*(volatile uint32_t *)(MY_ADC1_BASE + 0x0C))
+#define MY_ADC1_SMPR2 (*(volatile uint32_t *)(MY_ADC1_BASE + 0x10))
+#define MY_ADC1_SQR1 (*(volatile uint32_t *)(MY_ADC1_BASE + 0x2C))
+#define MY_ADC1_SQR3 (*(volatile uint32_t *)(MY_ADC1_BASE + 0x34))
+#define MY_ADC1_DR (*(volatile uint32_t *)(MY_ADC1_BASE + 0x4C))
 
 /* ADC Bit Fields */
-#define ADC_CR2_ADON      (1 << 0)
-#define ADC_CR2_SWSTART   (1 << 30)
-#define ADC_SR_EOC        (1 << 1)
+#define MY_ADC_CR2_ADON (1 << 0)
+#define MY_ADC_CR2_SWSTART (1 << 30)
+#define MY_ADC_SR_EOC (1 << 1)
 
 void ADC_Init(void);
 uint16 ADC_ReadChannel(uint8 channel);
-uint8 ADC_ValueToPercentage(uint16 adc_value);
+
+
+
 
 #endif //ADC_H

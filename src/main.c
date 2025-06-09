@@ -51,23 +51,34 @@ int main(void) {
     SetupClocks();
     SetupLCD();
     SetupButton();
+
+    // CHANGE: Configure PA0 as analog instead of PC0
+    Gpio_Init(GPIO_A, 0, GPIO_ANALOG, GPIO_PUSH_PULL);  // PA0 → Channel 0
     Gpio_Init(GPIO_C, 0, GPIO_ANALOG, GPIO_PUSH_PULL);  // PC0 → analog mode
     ADC_Init();     // Initialize ADC1 for channel 10
     PWM_Init(); // Initialize PWM on TIM1 (PA8)
-    LCD_Start(); // Initialize 16x2 LCD
+    LCD_Start(); // Initialize 20x4 LCD
+    Delay_Long(100);  // Extended delay
+    LCD_PrintText("Hello");
+    Delay_Long(10);  // Extended delay
+
 
     // marcilino Variables
-
+    uint16 var = 4095;
     uint16 pot_value;
     uint8 motor_percentage;
-    char lcd_buffer[16]; // Buffer for LCD string formatting
+    // char lcd_buffer[16]; // Buffer for LCD string formatting
 
     while (1) {
-        pot_value = ADC_ReadChannel(10);              // Read PC0 (Channel 10)
-        motor_percentage = ADC_ValueToPercentage(pot_value); // Convert to 0–100%
+        // 2. Read potentiometer
+        pot_value = ADC_ReadChannel(0);               // Read ADC channel 10 (PC0)
 
-        // 3. Update PWM duty cycle
-        PWM_SetDutyCycle(motor_percentage);            // Set motor speed
+        // 3. Update PWM duty cycle based on ADC value
+        PWM_SetDutyCycle(pot_value);                   // Set motor speed (maps ADC to 0–100%)
+
+        // 4. Get PWM duty cycle percentage for LCD
+        motor_percentage = PWM_GetDutyCyclePercentage(); // Get the percentage from PWM
+
 
         // 4. Update LCD with motor speed percentage
         LCD_Locate(0, 0);                              // Set cursor to first row, first column
@@ -75,11 +86,7 @@ int main(void) {
         LCD_PrintValue(motor_percentage);              // Display percentage value
         LCD_PrintText("%");                            // Append percentage sign
 
-        // 5. Clear second row to avoid leftover characters
-        LCD_Locate(1, 0);
-        LCD_PrintText("                ");            // 16 spaces to clear second row
 
-        Delay_Long(100); // 100 ms delay for LCD refresh
 
 
         if (isEmergencyActive) {

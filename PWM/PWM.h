@@ -18,6 +18,8 @@
 #define PWM_FREQ 1000 // 1 kHz PWM frequency
 #define PWM_PERIOD (16000000 / PWM_FREQ) - 1 // ARR value for 16 MHz clock
 
-void PWM_Init(void); void PWM_SetDutyCycle(uint8 percentage);
+void PWM_Init(void);
+void PWM_SetDutyCycle(uint16 adc_value); // Input ADC value (0–4095)
+uint8 PWM_GetDutyCyclePercentage(void); // Return current duty cycle as percentage
 
 #endif //PWM_H

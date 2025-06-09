@@ -3,6 +3,8 @@
 //
 #include "PWM.h"
 
+static uint8 current_percentage = 0; // Store current duty cycle percentage
+
 void PWM_Init(void) {
     // 1. Enable TIM1 and GPIOA clocks
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;   // Enable TIM1 clock
@@ -20,7 +22,17 @@ void PWM_Init(void) {
     PWM_TIMER->CR1 |= (1 << 0);           // Enable timer
 }
 
-void PWM_SetDutyCycle(uint8 percentage) {
-    if (percentage > 100) percentage = 100; // Cap at 100%
-    PWM_TIMER->CCR1 = (percentage * PWM_PERIOD) / 100; // Set duty cycle
+void PWM_SetDutyCycle(uint16 adc_value) {
+    // Cap ADC value at 4095 to prevent overflow
+    if (adc_value > 684) adc_value = 684;
+    // Map ADC value (0–4095) to percentage (0–100)
+    current_percentage = (uint8)(((uint32)adc_value * 100UL) / 684);
+    if (current_percentage > 100) current_percentage = 100; // Cap at 100%
+
+    // Set PWM duty cycle
+    PWM_TIMER->CCR1 = (current_percentage * PWM_PERIOD) / 100; // Duty cycle proportional to ARR
+}
+
+uint8 PWM_GetDutyCyclePercentage(void) {
+    return current_percentage; // Return the current duty cycle percentage
 }
