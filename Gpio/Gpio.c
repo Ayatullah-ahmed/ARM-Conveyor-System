@@ -76,6 +76,10 @@ void Gpio_Init(uint8 PortName, uint8 PinNumber, uint8 PinMode, uint8 DefaultStat
                     GPIOC_OTYPER |= (0x01 << PinNumber);
                 }
             }
+            else if(PinMode == GPIO_ANALOG) {
+                // Set both bits to 11 for analog mode
+                GPIOC_MODER |= (0x03 << (2 * PinNumber));
+            }
             break;
 
         case GPIO_D:

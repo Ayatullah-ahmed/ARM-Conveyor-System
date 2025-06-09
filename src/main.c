@@ -5,10 +5,12 @@
 #include "LCD.h"
 #include "ADC.h"
 #include "PWM.h"
+#include "ObjectDetection.h"
 
 #define __enable_irq()  (*((volatile uint32_t *)0xE000ED04) = 0)
 
 #define EMERGENCY_BUTTON_PIN 2  /* PC2 */
+#define IR_SENSOR_PIN 1         /* PC1 - IR sensor simulation (push button) */
 
 volatile uint8 isEmergencyActive = 0;
 
@@ -45,8 +47,6 @@ void SetupButton(void) {
     EXTI_Init();
 }
 
-
-
 int main(void) {
     SetupClocks();
     SetupLCD();
@@ -55,39 +55,45 @@ int main(void) {
     ADC_Init();     // Initialize ADC1 for channel 10
     PWM_Init(); // Initialize PWM on TIM1 (PA8)
     LCD_Start(); // Initialize 16x2 LCD
+    
+    // Initialize Object Detection
+    ObjectDetection_Init();
 
     // marcilino Variables
-
     uint16 pot_value;
     uint8 motor_percentage;
     char lcd_buffer[16]; // Buffer for LCD string formatting
 
+    // Initialize LCD display
+    LCD_Locate(0, 0);
+    LCD_PrintText("Speed: 0%       ");
+    LCD_Locate(1, 0);
+    LCD_PrintText("Objects: 0   ");
+
     while (1) {
+        // Object detection processing
+        ObjectDetection_Process();
+
         pot_value = ADC_ReadChannel(10);              // Read PC0 (Channel 10)
         motor_percentage = ADC_ValueToPercentage(pot_value); // Convert to 0–100%
 
-        // 3. Update PWM duty cycle
+        // Update PWM duty cycle
         PWM_SetDutyCycle(motor_percentage);            // Set motor speed
 
-        // 4. Update LCD with motor speed percentage
-        LCD_Locate(0, 0);                              // Set cursor to first row, first column
-        LCD_PrintText("Motor Speed: ");                // Display static text
-        LCD_PrintValue(motor_percentage);              // Display percentage value
-        LCD_PrintText("%");                            // Append percentage sign
-
-        // 5. Clear second row to avoid leftover characters
-        LCD_Locate(1, 0);
-        LCD_PrintText("                ");            // 16 spaces to clear second row
-
-        Delay_Long(100); // 100 ms delay for LCD refresh
-
+        // Update LCD with motor speed percentage (first row)
+        LCD_Locate(0, 0);                              
+        LCD_PrintText("Speed: ");                
+        LCD_PrintValue(motor_percentage);              
+        LCD_PrintText("%    ");                            // Clear leftover chars
 
         if (isEmergencyActive) {
             Gpio_WritePin(GPIO_B, 12, !Gpio_ReadPin(GPIO_B, 12)); // Debug toggle
             ShowEmergencyMessage();
             isEmergencyActive = 0; // Reset flag to allow toggling
         }
-        for (volatile int i = 0; i < 100000; i++); // Short delay instead of Delay_Long
+        
+        // Short delay to allow proper polling frequency
+        for (volatile int i = 0; i < 50000; i++); // Reduced delay for better edge detection
     }
 
     return 0;
