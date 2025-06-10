@@ -1,12 +1,29 @@
+
 #include "Exti.h"
 #include "Gpio.h"
 #include "Rcc.h"
 
-extern volatile uint8 isEmergencyActive;
+// Array to store callback functions for each EXTI line
+static EXTI_Callback_t EXTI_Callbacks[16] = {0};
 
-void EXTI_Init(uint8 line, uint8 port, uint8 trigger) {
+// Map EXTI line to NVIC IRQ number
+static uint8 EXTI_GetIRQn(uint8 line) {
+    if (line == 0) return EXTI0_IRQn;
+    if (line == 1) return EXTI1_IRQn;
+    if (line == 2) return EXTI2_IRQn;
+    if (line == 3) return EXTI3_IRQn;
+    if (line == 4) return EXTI4_IRQn;
+    if (line >= 5 && line <= 9) return EXTI9_5_IRQn;
+    if (line >= 10 && line <= 15) return EXTI15_10_IRQn;
+    return 0; // Invalid line
+}
+
+void EXTI_Init(uint8 line, uint8 port, uint8 trigger, uint8 priority, EXTI_Callback_t callback) {
     // Validate line (0-15 for STM32F4 EXTI lines)
     if (line > 15) return;
+
+    // Store callback
+    EXTI_Callbacks[line] = callback;
 
     // Configure SYSCFG for EXTI line
     uint32 *exticr;
@@ -27,13 +44,13 @@ void EXTI_Init(uint8 line, uint8 port, uint8 trigger) {
     *exticr &= ~(0xF << shift); // Clear EXTI line bits
     *exticr |= (port << shift); // Set port for EXTI line
 
-    // Configure trigger (0: rising, 1: falling, 2: both)
-    if (trigger == 0 || trigger == 2) {
+    // Configure trigger
+    if (trigger == EXTI_TRIGGER_RISING || trigger == EXTI_TRIGGER_BOTH) {
         EXTI->RTSR |= (1 << line); // Enable rising edge
     } else {
         EXTI->RTSR &= ~(1 << line); // Disable rising edge
     }
-    if (trigger == 1 || trigger == 2) {
+    if (trigger == EXTI_TRIGGER_FALLING || trigger == EXTI_TRIGGER_BOTH) {
         EXTI->FTSR |= (1 << line); // Enable falling edge
     } else {
         EXTI->FTSR &= ~(1 << line); // Disable falling edge
@@ -42,25 +59,28 @@ void EXTI_Init(uint8 line, uint8 port, uint8 trigger) {
     // Clear pending interrupt
     EXTI->PR |= (1 << line);
 
-    // Configure NVIC (assuming line 2 uses IRQ8 for EXTI2)
-    if (line == 2) {
-        NVIC_IPR[8] = (0 << 0); // Set priority 0 (highest)
+    // Configure NVIC
+    uint8 irqn = EXTI_GetIRQn(line);
+    if (irqn != 0) {
+        NVIC_IPR[irqn] = (priority << 4); // Set priority (shifted for STM32F4)
     }
 }
 
 void EXTI_Enable(uint8 line) {
     if (line > 15) return;
     EXTI->IMR |= (1 << line); // Enable interrupt
-    if (line == 2) {
-        NVIC_ISER0 |= (1 << 8); // Enable EXTI2 interrupt in NVIC (IRQ Separator)
+    uint8 irqn = EXTI_GetIRQn(line);
+    if (irqn != 0) {
+        NVIC_ISER0 |= (1 << (irqn % 32)); // Enable interrupt in NVIC
     }
 }
 
 void EXTI_Disable(uint8 line) {
     if (line > 15) return;
     EXTI->IMR &= ~(1 << line); // Disable interrupt
-    if (line == 2) {
-        NVIC_ICER0 |= (1 << 8); // Disable EXTI2 interrupt in NVIC
+    uint8 irqn = EXTI_GetIRQn(line);
+    if (irqn != 0) {
+        NVIC_ICER0 |= (1 << (irqn % 32)); // Disable interrupt in NVIC
     }
 }
 
@@ -69,10 +89,56 @@ void EXTI_ClearPending(uint8 line) {
     EXTI->PR |= (1 << line); // Clear pending interrupt
 }
 
+// Interrupt Handlers
+void EXTI0_IRQHandler(void) {
+    if (EXTI->PR & (1 << 0)) {
+        EXTI->PR |= (1 << 0);
+        if (EXTI_Callbacks[0]) EXTI_Callbacks[0]();
+    }
+}
+
+void EXTI1_IRQHandler(void) {
+    if (EXTI->PR & (1 << 1)) {
+        EXTI->PR |= (1 << 1);
+        if (EXTI_Callbacks[1]) EXTI_Callbacks[1]();
+    }
+}
+
 void EXTI2_IRQHandler(void) {
-    if (EXTI->PR & (1 << 2)) { // Check if EXTI2 triggered
-        EXTI->PR |= (1 << 2);  // Clear pending bit
-        isEmergencyActive = 1;  // Set flag for emergency state
-        Gpio_WritePin(GPIO_B, 8, !Gpio_ReadPin(GPIO_B, 8)); // Debug toggle
+    if (EXTI->PR & (1 << 2)) {
+        EXTI->PR |= (1 << 2);
+        if (EXTI_Callbacks[2]) EXTI_Callbacks[2]();
+    }
+}
+
+void EXTI3_IRQHandler(void) {
+    if (EXTI->PR & (1 << 3)) {
+        EXTI->PR |= (1 << 3);
+        if (EXTI_Callbacks[3]) EXTI_Callbacks[3]();
+    }
+}
+
+void EXTI4_IRQHandler(void) {
+    if (EXTI->PR & (1 << 4)) {
+        EXTI->PR |= (1 << 4);
+        if (EXTI_Callbacks[4]) EXTI_Callbacks[4]();
+    }
+}
+
+void EXTI9_5_IRQHandler(void) {
+    for (uint8 line = 5; line <= 9; line++) {
+        if (EXTI->PR & (1 << line)) {
+            EXTI->PR |= (1 << line);
+            if (EXTI_Callbacks[line]) EXTI_Callbacks[line]();
+        }
+    }
+}
+
+void EXTI15_10_IRQHandler(void) {
+    for (uint8 line = 10; line <= 15; line++) {
+        if (EXTI->PR & (1 << line)) {
+            EXTI->PR |= (1 << line);
+            if (EXTI_Callbacks[line]) EXTI_Callbacks[line]();
+        }
     }
 }

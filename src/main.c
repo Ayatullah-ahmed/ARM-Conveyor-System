@@ -2,8 +2,8 @@
 #include "GPIO.h"
 #include "Rcc.h"
 #include "Exti.h"
-#include "LCD.h"
 #include "Timer.h"
+#include "LCD.h"
 #include "ObjectDetection.h"
 
 #define __enable_irq()  (*((volatile uint32 *)0xE000ED04) = 0)
@@ -14,6 +14,11 @@ static uint8 lastDisplayState = 0; // 0: normal, 1: emergency
 
 void Delay_Ms(volatile uint32 count) {
     while(count--);
+}
+
+void EmergencyButtonCallback(void) {
+    isEmergencyActive = 1; // Set emergency state on button press
+    Gpio_WritePin(GPIO_B, 8, !Gpio_ReadPin(GPIO_B, 8)); // Debug toggle
 }
 
 void ShowEmergencyMessage(void) {
@@ -33,24 +38,24 @@ void ShowNormalDisplay(void) {
         LCD_Erase();
         lastDisplayState = 0;
     }
-    
+
     // Row 0: System Title
     LCD_Locate(0, 2);
     LCD_PrintText("Conveyor System");
-    
+
     // Row 1: Speed Measurement from Timer
     LCD_Locate(1, 0);
     LCD_PrintText("Speed: ");
     uint32 frequency = TIM2_MeasureFrequency();
     LCD_PrintValue(frequency);
     LCD_PrintText(" Hz    ");
-    
+
     // Row 2: Object Count from Both IR Sensors
     LCD_Locate(2, 0);
     LCD_PrintText("Objects: ");
     LCD_PrintValue(ObjectDetection_GetCount());
     LCD_PrintText("    ");
-    
+
     // Row 3: Sensor Status (PC1=Button, PC7=Module)
     LCD_Locate(3, 0);
     LCD_PrintText("PC1:");
@@ -73,18 +78,18 @@ void SetupPeripherals(void) {
     // Initialize LCD (20x4)
     LCD_Start();
     LCD_Erase();
-    
+
     // Initialize Timer Input Capture for Speed Measurement (PA0)
     TIM2_InputCapture_Init();
-    
+
     // Initialize Object Detection (PC1)
     ObjectDetection_Init();
-    
+
     // Configure PC2 for EXTI2 (Emergency Button)
     Gpio_Init(GPIO_C, EMERGENCY_BUTTON_PIN, GPIO_INPUT, GPIO_PULL_UP);
-    EXTI_Init(2, 2, 1); // Line 2, Port C (2), Falling edge (1)
+    EXTI_Init(2, 2, EXTI_TRIGGER_FALLING, 0, EmergencyButtonCallback); // Line 2, Port C (2), Falling edge, Priority 0
     EXTI_Enable(2);
-    
+
     // Show initialization message
     LCD_Locate(1, 2);
     LCD_PrintText("Initializing...");
@@ -100,13 +105,10 @@ int main(void) {
     while (1) {
         if (isEmergencyActive) {
             ShowEmergencyMessage();
-            // Reset emergency flag after showing message
-            Delay_Ms(100000); // Reduced emergency display time
-            isEmergencyActive = 0;
         } else {
             // Process Object Detection (software polling - no interrupts)
             ObjectDetection_Process();
-            
+
             // Update normal display with all system information
             ShowNormalDisplay();
         }
