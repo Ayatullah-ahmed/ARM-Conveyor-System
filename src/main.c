@@ -45,15 +45,19 @@ void ShowNormalDisplay(void) {
     LCD_PrintValue(frequency);
     LCD_PrintText(" Hz    ");
     
-    // Row 2: Object Count from Object Detection
+    // Row 2: Object Count from Both IR Sensors
     LCD_Locate(2, 0);
     LCD_PrintText("Objects: ");
     LCD_PrintValue(ObjectDetection_GetCount());
     LCD_PrintText("    ");
     
-    // Row 3: System Status
+    // Row 3: Sensor Status (PC1=Button, PC7=Module)
     LCD_Locate(3, 0);
-    LCD_PrintText("Status: RUNNING     ");
+    LCD_PrintText("PC1:");
+    LCD_PrintValue(!Gpio_ReadPin(GPIO_C, 1)); // Show 1 when active (inverted)
+    LCD_PrintText(" PC7:");
+    LCD_PrintValue(!Gpio_ReadPin(GPIO_C, 7)); // Show 1 when active (inverted)
+    LCD_PrintText("     ");
 }
 
 void SetupClocks(void) {
