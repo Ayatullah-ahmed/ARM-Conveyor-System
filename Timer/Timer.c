@@ -10,22 +10,18 @@ void TIM2_InputCapture_Init(void) {
     Rcc_Enable(RCC_TIM2);
 
     // 2. Configure PA0 as alternate function input for TIM2_CH1
-    // For many STM32s, TIM2_CH1 is on AF1
     Gpio_Init(GPIO_A, 0, GPIO_AF, GPIO_AF1);
 
     // 3. Configure TIM2 for Input Capture on Channel 1 (TI1)
-    // CC1S = 01: CC1 channel is configured as input, IC1 is mapped on TI1
     TIM2->CCMR1 |= (1 << 0);
 
-    // 4. Configure to capture on the rising edge (default) and enable capture
-    // CC1P=0, CC1NP=0 for rising edge. CC1E=1 to enable capture.
+    // 4. Configure to capture on the rising edge and enable capture
     TIM2->CCER |= (1 << 0);
 
-    // 5. Set prescaler. The Rcc_Init() enables the 16MHz HSI.
-    // Timer clock = System Clock / (Prescaler + 1)
-    // 1MHz = 16MHz / (15 + 1)
-    TIM2->PSC = 15;
-    TIM2->ARR = 0xFFFF; // Set auto-reload register to max for 16-bit timer
+    // 5. Set prescaler for STM32F401VE (84MHz APB1 clock)
+    // Timer clock = 84MHz / (83 + 1) = 1MHz
+    TIM2->PSC = 83;
+    TIM2->ARR = 0xFFFFFFFF; // Set auto-reload register to max for 32-bit timer
 
     // 6. Enable the timer counter
     TIM2->CR1 |= (1 << 0);
@@ -61,12 +57,12 @@ uint32 TIM2_MeasurePeriod(void) {
     capture2 = TIM2_GetCaptureValue();
     TIM2_ClearCaptureFlag();
 
-    // Calculate the period, handling timer overflow
+    // Calculate the period, handling timer overflow (32-bit timer)
     if (capture2 > capture1) {
         period = capture2 - capture1;
     } else {
         // Overflow occurred
-        period = (0xFFFF - capture1) + capture2 + 1;
+        period = (0xFFFFFFFF - capture1) + capture2 + 1;
     }
     return period;
 }

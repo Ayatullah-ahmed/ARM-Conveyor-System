@@ -10,6 +10,8 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         ${PROJECT_PATH}/Exti
         ${PROJECT_PATH}/ADC
         ${PROJECT_PATH}/PWM
+        ${PROJECT_PATH}/ObjectDetection
+        ${PROJECT_PATH}/Timer
 
 )
 

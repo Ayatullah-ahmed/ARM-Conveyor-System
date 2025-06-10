@@ -7,13 +7,13 @@
 // Delay Implementation with Nested Loops
 void Delay_Short(uint32 microseconds) {
     for (uint32 outer = 0; outer < microseconds; outer++) {
-        for (volatile uint32 inner = 0; inner < 5; inner++); // Approx 5 cycles per us at 4 MHz
+        for (volatile uint32 inner = 0; inner < 3; inner++); // Reduced from 5 to 3
     }
 }
 
 void Delay_Long(uint32 milliseconds) {
     for (uint32 outer = 0; outer < milliseconds; outer++) {
-        for (volatile uint32 inner = 0; inner < 5000; inner++); // Approx 5000 cycles per ms at 4 MHz
+        for (volatile uint32 inner = 0; inner < 3000; inner++); // Reduced from 5000 to 3000
     }
 }
 
@@ -31,16 +31,16 @@ static void Send_DataChunk(uint8 value, enum LCD_Mode mode) {
         Gpio_WritePin(LCD_DATA_PORT, pinMap[i], dataBits[i]);
     }
     Gpio_WritePin(LCD_CMD_PORT, LCD_E_BIT, HIGH_LEVEL);
-    Delay_Short(2); // Extended pulse for reliability
+    Delay_Short(1); // Reduced pulse width
     Gpio_WritePin(LCD_CMD_PORT, LCD_E_BIT, LOW_LEVEL);
-    Delay_Short(150); // Extended delay for stability
+    Delay_Short(50); // Reduced delay for faster operation
 }
 
 // Command Execution
 static void Execute_Command(enum LCD_Operation cmd) {
     Send_DataChunk(cmd >> 4, INSTRUCTION_MODE);
     Send_DataChunk(cmd & 0x0F, INSTRUCTION_MODE);
-    Delay_Short(50); // Command execution delay
+    Delay_Short(30); // Reduced command execution delay
 }
 
 // Initialization Phases
@@ -79,7 +79,7 @@ void LCD_Start(void) {
 
 void LCD_Erase(void) {
     Execute_Command(LCD_CLEAR_ALL);
-    Delay_Long(3); // Extended clear delay
+    Delay_Long(2); // Reduced clear delay
 }
 
 void LCD_Locate(uint8 row, uint8 column) {
@@ -103,7 +103,7 @@ void LCD_ShiftPointer(uint8 direction) {
 void LCD_PrintChar(uint8 character) {
     Send_DataChunk(character >> 4, CHARACTER_MODE);
     Send_DataChunk(character & 0x0F, CHARACTER_MODE);
-    Delay_Short(50);
+    Delay_Short(30); // Reduced character delay
 }
 
 void LCD_PrintText(const char *text) {

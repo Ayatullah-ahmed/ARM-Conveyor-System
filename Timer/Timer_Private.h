@@ -11,7 +11,7 @@
 #define TIM_CCER_CC1E        (1UL << 0)    // Capture/Compare 1 output enable
 
 // Define TIM2 register structure and bit definitions
-#define TIM2_BASE_ADDR       0x40000000
+#define TIM2_BASE_ADDR       0x40000000  // Correct for STM32F401VE APB1
 #define TIM2                 ((TIM_TypeDef*)TIM2_BASE_ADDR)
 
 // Timer register offsets

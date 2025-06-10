@@ -30,6 +30,13 @@ add_executable(${EXECUTABLE} ${SOURCE_LIST} ${STARTUP_BASE_DIR}/${SERIES_FOLDER}
         ADC/ADC.c
         PWM/PWM.h
         PWM/PWM.c
+        ObjectDetection/ObjectDetection.h
+        ObjectDetection/ObjectDetection.c
+        Timer/Timer_Private.h
+        Timer/Timer.h
+        Timer/Timer.c
+
+
 )
 # Include
 target_include_directories(${EXECUTABLE} PUBLIC ${INCLUDE_LIST})
